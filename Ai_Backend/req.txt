@@ -1,0 +1,10 @@
+langchain-chroma
+dotenv
+langchain_ollama
+langchain_community
+flask==3.1.0
+pypdf
+pinecone
+trulens
+openai
+flask_cors
