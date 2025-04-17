@@ -1,24 +1,21 @@
 # app.py
-from flask import Flask
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import dotenv
 import os
-from routes.query_routes import query_bp
-from routes.pdf_routes import pdf_handler
-
-from flask_cors import CORS
-
 import logging
+from routes.query_routes import query_router
+from routes.pdf_routes import pdf_router
 
+# Configure logging
 logging.basicConfig(
-    filename='app.log',  # This will create app.log file in the current directory
-    level=logging.DEBUG,  # Capture all logs (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    filename='app.log',
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 
-
 # Load Environment Variables
 dotenv.load_dotenv()
-
 
 MODEL_NAME = os.getenv("MODEL_NAME")
 PINECONE_API = os.getenv("PINECONE_API")
@@ -26,17 +23,25 @@ PINECONE_INDEX = os.getenv("PINECONE_INDEX")
 
 
 def create_app():
-    app = Flask(__name__)
+    app = FastAPI(title="AI Backend API")
     
-    CORS(app)
-    # Register blueprints
-    app.register_blueprint(query_bp)
-    app.register_blueprint(pdf_handler)
-
+    # Configure CORS
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    
+    # Include routers
+    app.include_router(query_router, prefix="/api")
+    app.include_router(pdf_router, prefix="/api")
     
     return app
 
+app = create_app()
 
 if __name__ == "__main__":
-    app = create_app()
-    app.run(host="0.0.0.0", port=8000,debug=True)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
